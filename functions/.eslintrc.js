@@ -11,7 +11,6 @@ module.exports = {
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
-  include: ['src'],
   ignorePatterns: [
     '/lib/**/*', // Ignore built files.
   ],
