@@ -1,6 +1,7 @@
 import { Secrets } from "../models/constants/secrets";
 import { IStripeCreateCustomerParams, IStripeCreatePaymentIntentParams } from "../models/stripe";
 import { stripeService } from "../services/stripe";
+import { usersService } from "../services/users";
 import { getSecret } from "../utils/secrets";
 
 export const stripeAction = {
@@ -17,9 +18,10 @@ export const stripeAction = {
       publishableKey: getSecret(Secrets.STRIPE_PK)
     }
   },
-  createCustomer: async ({ customerInternalId, phoneNumber }: IStripeCreateCustomerParams) => {
-    const customer = await stripeService.createCustomer(customerInternalId, phoneNumber)
+  createCustomer: async ({ userId, phoneNumber }: IStripeCreateCustomerParams) => {
+    const stripeCustomer = await stripeService.createCustomer(userId, phoneNumber)
+    await usersService.addStripeCustomerIdToUser(userId, stripeCustomer.id)
 
-    return customer
+    return stripeCustomer
   }
 }

@@ -4,6 +4,6 @@ export interface IStripeCreatePaymentIntentParams {
 }
 
 export interface IStripeCreateCustomerParams {
-  customerInternalId: string
+  userId: string
   phoneNumber: string
 }
