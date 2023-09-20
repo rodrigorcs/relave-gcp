@@ -3,8 +3,14 @@ import { Constants } from "../models/constants";
 import { Secrets } from "../models/constants/secrets";
 import { getSecret } from "../utils/secrets";
 
-const STRIPE_SK = getSecret(Secrets.STRIPE_SK)
+let stripeInstance: Stripe | null = null;
 
-export const stripe = new Stripe(STRIPE_SK, {
-  apiVersion: Constants.STRIPE_API_VERSION,
-});
+export const getStripeInstance = async (): Promise<Stripe> => {
+  if (!stripeInstance) {
+    const STRIPE_SK = await getSecret(Secrets.STRIPE_SK);
+    stripeInstance = new Stripe(STRIPE_SK, {
+      apiVersion: Constants.STRIPE_API_VERSION,
+    });
+  }
+  return stripeInstance;
+};

@@ -1,7 +1,7 @@
-import { Config } from "../config";
-import { stripe } from "../external/stripe";
+import { Secrets } from "../models/constants/secrets";
 import { IStripeCreateCustomerParams, IStripeCreatePaymentIntentParams } from "../models/stripe";
 import { stripeService } from "../services/stripe";
+import { getSecret } from "../utils/secrets";
 
 export const stripeAction = {
   createPaymentIntent: async ({ customerId, amount }: IStripeCreatePaymentIntentParams) => {
@@ -12,17 +12,11 @@ export const stripeAction = {
       paymentIntentClientSecret: paymentIntent.client_secret,
       customerEphemeralKeySecret: ephemeralKey.secret,
       customerId,
-      publishableKey: Config.STRIPE_PK
+      publishableKey: getSecret(Secrets.STRIPE_PK)
     }
   },
-  createCustomer: async ({ customerInternalId, phone }: IStripeCreateCustomerParams) => {
-    const customer = await stripe.customers.create({
-      phone,
-      metadata: {
-        internalId: customerInternalId
-      },
-      description: 'Created by back-end',
-    });
+  createCustomer: async ({ customerInternalId, phoneNumber }: IStripeCreateCustomerParams) => {
+    const customer = await stripeService.createCustomer(customerInternalId, phoneNumber)
 
     return customer
   }
