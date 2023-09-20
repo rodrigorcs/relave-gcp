@@ -10,7 +10,19 @@ const STRIPE_PK = defineSecret(Secrets.STRIPE_PK)
 
 initializeApp();
 
-export const paymentIntent = onRequest({ secrets: [STRIPE_SK, STRIPE_PK] }, async (req: Request, res: Response) => {
+export const createStripeCustomer = onRequest({ secrets: [STRIPE_SK, STRIPE_PK] }, async (req: Request, res: Response) => {
+  const { customerStripeId, amount } = req.body
+
+  try {
+    const paymentIntentKeys = await stripeAction.createPaymentIntent({ customerId: customerStripeId, amount })
+    res.json(paymentIntentKeys)
+  }
+  catch (error) {
+    res.json({ error })
+  }
+});
+
+export const createStripePaymentIntent = onRequest({ secrets: [STRIPE_SK, STRIPE_PK] }, async (req: Request, res: Response) => {
   const { customerStripeId, amount } = req.body
 
   try {

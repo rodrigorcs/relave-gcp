@@ -5,8 +5,10 @@ import { getSecret } from "../utils/secrets";
 
 export const stripeAction = {
   createPaymentIntent: async ({ customerId, amount }: IStripeCreatePaymentIntentParams) => {
-    const ephemeralKey = await stripeService.createEphemeralKey(customerId)
-    const paymentIntent = await stripeService.createPaymentIntent(customerId, amount)
+    const ephemeralKeyPromise = stripeService.createEphemeralKey(customerId)
+    const paymentIntentPromise = stripeService.createPaymentIntent(customerId, amount)
+
+    const [ephemeralKey, paymentIntent] = await Promise.all([ephemeralKeyPromise, paymentIntentPromise]);
 
     return {
       paymentIntentClientSecret: paymentIntent.client_secret,
