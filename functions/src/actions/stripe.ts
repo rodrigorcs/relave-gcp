@@ -19,9 +19,9 @@ export const stripeAction = {
     }
   },
   createCustomer: async ({ userId, phoneNumber }: IStripeCreateCustomerParams) => {
-    const stripeCustomer = await stripeService.createCustomer(userId, phoneNumber)
-    await usersService.addStripeCustomerIdToUser(userId, stripeCustomer.id)
+    const stripeCustomerId = await stripeService.createCustomer(userId, phoneNumber)
+    await usersService.addStripeCustomerIdToUser(userId, stripeCustomerId)
 
-    return stripeCustomer
+    return stripeCustomerId
   }
 }

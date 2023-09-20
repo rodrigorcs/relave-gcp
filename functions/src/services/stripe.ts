@@ -32,6 +32,6 @@ export const stripeService = {
       description: 'Created by back-end',
     });
 
-    return customer
+    return customer.id
   }
 }
