@@ -1,7 +1,7 @@
-import { getStripeInstance } from "../external/stripe";
-import { Constants } from "../models/constants";
+import { getStripeInstance } from "../../external/stripe";
+import { Constants } from "../../models/constants";
 
-export const stripeService = {
+export const stripeCustomersService = {
   createEphemeralKey: async (customerId: string) => {
     const stripe = await getStripeInstance();
     const ephemeralKey = await stripe.ephemeralKeys.create(
@@ -10,17 +10,6 @@ export const stripeService = {
     )
 
     return ephemeralKey
-  },
-  createPaymentIntent: async (customerId: string, amount: number) => {
-    const stripe = await getStripeInstance();
-    const paymentIntent = await stripe.paymentIntents.create({
-      customer: customerId,
-      amount,
-      currency: 'brl',
-      automatic_payment_methods: { enabled: true },
-    });
-
-    return paymentIntent
   },
   createCustomer: async (customerInternalId: string, phoneNumber: string) => {
     const stripe = await getStripeInstance();
@@ -33,5 +22,5 @@ export const stripeService = {
     });
 
     return customer.id
-  }
+  },
 }
