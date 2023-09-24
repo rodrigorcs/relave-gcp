@@ -6,9 +6,9 @@ import { usersService } from "../services/users";
 import { getSecret } from "../utils/secrets";
 
 export const stripeAction = {
-  createPaymentIntent: async ({ customerId, amount }: IStripeCreatePaymentIntentParams) => {
+  createPaymentIntent: async ({ customerId, orderId, amount }: IStripeCreatePaymentIntentParams) => {
     const ephemeralKeyPromise = stripeCustomersService.createEphemeralKey(customerId)
-    const paymentIntentPromise = stripePaymentIntentsService.createPaymentIntent(customerId, amount)
+    const paymentIntentPromise = stripePaymentIntentsService.createPaymentIntent(customerId, orderId, amount)
 
     const [ephemeralKey, paymentIntent] = await Promise.all([ephemeralKeyPromise, paymentIntentPromise]);
 
@@ -24,5 +24,9 @@ export const stripeAction = {
     await usersService.addStripeCustomerIdToUser(userId, stripeCustomerId)
 
     return stripeCustomerId
+  },
+  processPaymentIntentUpdate: async (updateEvent: Buffer, signature: string) => {
+    const successfulPaymentIntent = stripePaymentIntentsService.getPaymentIntentFromEvent(updateEvent, signature)
+    if (!successfulPaymentIntent) return
   }
 }

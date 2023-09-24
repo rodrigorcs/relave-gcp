@@ -1,5 +1,6 @@
 export interface IStripeCreatePaymentIntentParams {
   customerId: string
+  orderId: string
   amount: number
 }
 
