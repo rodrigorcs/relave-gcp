@@ -30,6 +30,13 @@ export const stripeAction = {
     const successfulPaymentIntent = await stripePaymentIntentsService.getPaymentIntentFromEvent(updateEvent, signature)
     if (!successfulPaymentIntent) return
 
-    await ordersService.updateOrderPaymentData(successfulPaymentIntent)
+    const { customerId, paymentMethodId } = successfulPaymentIntent
+    const paymentMethod = await stripeCustomersService.getPaymentMethodByCustomerId(customerId, paymentMethodId)
+
+    const paymentData = { ...successfulPaymentIntent, lastDigits: paymentMethod.card?.last4, cardBrand: paymentMethod.card?.brand }
+
+    console.log({ paymentData })
+
+    await ordersService.updateOrderPaymentData(paymentData)
   }
 }

@@ -34,6 +34,7 @@ export const stripePaymentIntentsService = {
 
       return {
         paymentIntentId: payload.id,
+        customerId: payload.customer,
         orderId: payload.metadata?.orderId,
         status: payload.status,
         totalPaid: payload.amount,

@@ -23,4 +23,10 @@ export const stripeCustomersService = {
 
     return customer.id
   },
+  getPaymentMethodByCustomerId: async (customerId: string, paymentMethodId: string) => {
+    const stripe = await getStripeInstance();
+    const paymentMethod = await stripe.customers.retrievePaymentMethod(customerId, paymentMethodId)
+
+    return paymentMethod
+  },
 }
