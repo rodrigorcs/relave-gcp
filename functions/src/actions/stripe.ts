@@ -4,6 +4,7 @@ import { stripePaymentIntentsService } from "../services/stripe/paymentIntents";
 import { stripeCustomersService } from "../services/stripe/customers";
 import { usersService } from "../services/users";
 import { getSecret } from "../utils/secrets";
+import { ordersService } from "../services/orders";
 
 export const stripeAction = {
   createPaymentIntent: async ({ customerId, orderId, amount }: IStripeCreatePaymentIntentParams) => {
@@ -26,7 +27,9 @@ export const stripeAction = {
     return stripeCustomerId
   },
   processPaymentIntentUpdate: async (updateEvent: Buffer, signature: string) => {
-    const successfulPaymentIntent = stripePaymentIntentsService.getPaymentIntentFromEvent(updateEvent, signature)
+    const successfulPaymentIntent = await stripePaymentIntentsService.getPaymentIntentFromEvent(updateEvent, signature)
     if (!successfulPaymentIntent) return
+
+    await ordersService.updateOrderPaymentData(successfulPaymentIntent)
   }
 }

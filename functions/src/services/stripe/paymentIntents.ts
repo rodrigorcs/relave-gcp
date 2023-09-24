@@ -1,5 +1,6 @@
 import { getStripeInstance } from "../../external/stripe";
 import { Secrets } from "../../models/constants/secrets";
+import { IPaymentIntentData } from "../../models/contracts/paymentIntent";
 import { getSecret } from "../../utils/secrets";
 
 export const stripePaymentIntentsService = {
@@ -17,7 +18,7 @@ export const stripePaymentIntentsService = {
 
     return paymentIntent
   },
-  getPaymentIntentFromEvent: async (rawBody: Buffer, signature: string) => {
+  getPaymentIntentFromEvent: async (rawBody: Buffer, signature: string): Promise<IPaymentIntentData | null> => {
     const stripe = await getStripeInstance();
 
     try {
@@ -34,7 +35,7 @@ export const stripePaymentIntentsService = {
       return {
         paymentIntentId: payload.id,
         orderId: payload.metadata?.orderId,
-        status: payload.status,
+        paymentStatus: payload.status,
         totalPaid: payload.amount,
         paidAt: payload.created,
         paymentMethodId: payload.payment_method

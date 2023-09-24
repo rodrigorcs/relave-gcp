@@ -1,9 +1,12 @@
 import { firestore } from "firebase-admin"
 import { EFirestoreCollections } from "../models/constants/firestore"
+import { IPaymentIntentData } from "../models/contracts/paymentIntent"
 
 export const ordersRepository = {
-  updateOrderPaymentStatus: async (orderId: string, paymentStatus: string) => {
+  updateOrderPaymentData: async (paymentIntentData: IPaymentIntentData) => {
     const ordersCollection = firestore().collection(EFirestoreCollections.ORDERS)
-    await ordersCollection.doc(orderId).update({ paymentStatus })
+
+    const { orderId, ...paymentIntentAttributes } = paymentIntentData
+    await ordersCollection.doc(orderId).update({ payment: paymentIntentAttributes })
   }
 }
