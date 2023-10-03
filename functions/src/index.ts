@@ -14,18 +14,45 @@ const STRIPE_WEBHOOK_SECRET = defineSecret(Secrets.STRIPE_WEBHOOK_SECRET)
 
 initializeApp();
 
-// Pure function to find available employees
-const getAvailableEmployees = (employees: { [key: string]: string }, timeSlotIndex: number) =>
-  Object.entries(employees).filter(([, availability]) => availability.charAt(timeSlotIndex) === '0').map(([id]) => id);
+const getAvailableEmployees = (employees: { [key: string]: string }, startIndex: number, slotsToMark: number) =>
+  Object.entries(employees)
+    .filter(([, availability]) => areSlotsAvailable(availability, startIndex, slotsToMark))
+    .map(([id]) => id);
 
-// Pure function to find the employee with fewer assignments
 const getLessOccupiedEmployee = (employees: { [key: string]: string }, availableEmployees: string[]) =>
   availableEmployees.reduce((acc, cur) =>
     (employees[cur].split('1').length < employees[acc].split('1').length ? cur : acc), availableEmployees[0]);
 
-// Pure function to update availability strings
-const updateAvailabilityString = (availability: string, timeSlotIndex: number) =>
-  `${availability.substring(0, timeSlotIndex)}1${availability.substring(timeSlotIndex + 1)}`;
+const getIndexFromTimestamp = (orderTimestamp: number, zeroPointTimestamp: number, slotDurationInSeconds: number): number =>
+  Math.floor((orderTimestamp - zeroPointTimestamp) / slotDurationInSeconds);
+
+const markMultipleSlots = (availability: string, startIndex: number, slotsToMark: number) => {
+  const charArray = availability.split('');
+  for (let i = startIndex; i < startIndex + slotsToMark; i++) {
+    charArray[i] = '1';
+  }
+  return charArray.join('');
+};
+
+const areSlotsAvailable = (availability: string, startIndex: number, slotsToMark: number) =>
+  !availability.slice(startIndex, startIndex + slotsToMark).includes('1');
+
+const updateTotalBusyTimes = (
+  employees: { [key: string]: string }
+): string => {
+  const numSlots = Object.values(employees)[0].length;
+  let updatedTotalBusyTimes = '';
+
+  for (let i = 0; i < numSlots; i++) {
+    const allEmployeesBusy = Object.values(employees).every(
+      (availability) => availability.charAt(i) === '1'
+    );
+
+    updatedTotalBusyTimes += allEmployeesBusy ? '1' : '0';
+  }
+
+  return updatedTotalBusyTimes;
+};
 
 export const createStripeCustomer = onRequest({ secrets: [STRIPE_SK, STRIPE_PK], region: 'southamerica-east1' }, async (req: Request, res: Response) => {
   const { userId, phoneNumber } = req.body
@@ -61,27 +88,41 @@ export const stripeWebhook = onRequest({ secrets: [STRIPE_SK, STRIPE_WEBHOOK_SEC
 export const addOrderToSchedule = onDocumentUpdated('orders/{orderId}', async (event) => {
   const oldStatus = event.data?.before.get('status');
   const newStatus = event.data?.after.get('status');
+  const orderId = event.data?.after.get('id');
   const dateId = event.data?.after.get('dateId');
+  const orderTimestamp = 1696320000 //event.data?.after.get('timestamp');
+  const durationMinutes = 90 //event.data?.after.get('duration'); 
 
   if (newStatus === oldStatus) return
   if (newStatus === EOrderStatus.PAID) {
-    logger.debug('Order is now paid, ready to pick an employee')
+    logger.info(`Detected payment for order ${orderId}.`)
 
     try {
-      const daySchedule = await daySchedulesRepository.getByDate(dateId)
+      const daySchedule = await daySchedulesRepository.getByDate(dateId);
 
-      // Functional calls to get available employee and select one
-      const availableEmployees = getAvailableEmployees(daySchedule.employees, 20);
-      const selectedEmployee = getLessOccupiedEmployee(daySchedule.employees, availableEmployees);
+      const zeroPointTimestamp = (new Date(dateId).getTime()) / 1000;
+      const slotDurationInSeconds = 30 * 60;
 
-      // Functional calls to update availability strings
-      const updatedEmployeeAvailability = updateAvailabilityString(daySchedule.employees[selectedEmployee], 20);
-      const updatedTotalBusyTimes = updateAvailabilityString(daySchedule.busyTimes, 20);
+      const startIndex = getIndexFromTimestamp(orderTimestamp, zeroPointTimestamp, slotDurationInSeconds);
+      const slotsToMark = durationMinutes / 30;
 
-      // Apply updates
-      await daySchedulesRepository.updateEmployeeSchedule(dateId, selectedEmployee, { employeeAvailability: updatedEmployeeAvailability, busyTimes: updatedTotalBusyTimes })
+      const availableEmployees = getAvailableEmployees(daySchedule.employees, startIndex, slotsToMark);
+      const selectedEmployeeId = getLessOccupiedEmployee(daySchedule.employees, availableEmployees);
 
-      return selectedEmployee;
+      const updatedEmployeeAvailability = markMultipleSlots(daySchedule.employees[selectedEmployeeId], startIndex, slotsToMark);
+
+      const updatedEmployees = {
+        ...daySchedule.employees,
+        [selectedEmployeeId]: updatedEmployeeAvailability,
+      };
+
+      const updatedTotalBusyTimes = updateTotalBusyTimes(updatedEmployees);
+
+      await daySchedulesRepository.updateEmployeeSchedule(dateId, selectedEmployeeId, { employeeAvailability: updatedEmployeeAvailability, busyTimes: updatedTotalBusyTimes });
+
+      logger.info(`Assigned order ${orderId} to employee ${selectedEmployeeId}.`)
+
+      return selectedEmployeeId;
 
     } catch (error) {
       console.error('Error in assignEmployee:', error);
