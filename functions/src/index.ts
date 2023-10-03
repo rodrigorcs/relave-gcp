@@ -1,9 +1,11 @@
-import { Response } from "firebase-functions"
+import { logger, Response } from "firebase-functions"
 import { onRequest, Request } from "firebase-functions/v2/https"
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { initializeApp } from "firebase-admin/app"
 import { stripeAction } from "./actions/stripe";
 import { defineSecret } from "firebase-functions/params";
 import { Secrets } from "./models/constants/secrets";
+import { EOrderStatus } from "./models/contracts/order";
 
 const STRIPE_SK = defineSecret(Secrets.STRIPE_SK)
 const STRIPE_PK = defineSecret(Secrets.STRIPE_PK)
@@ -41,4 +43,15 @@ export const stripeWebhook = onRequest({ secrets: [STRIPE_SK, STRIPE_WEBHOOK_SEC
 
   res.sendStatus(201);
 });
+
+export const addOrderToSchedule = onDocumentUpdated('orders/{orderId}', async (event) => {
+  const oldStatus = event.data?.before.get('status');
+  const newStatus = event.data?.after.get('status');
+
+  if (newStatus === oldStatus) return
+  if (newStatus === EOrderStatus.PAID) {
+    logger.debug('Order is now paid, ready to pick an employee')
+  }
+
+})
 

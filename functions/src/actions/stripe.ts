@@ -35,8 +35,6 @@ export const stripeAction = {
 
     const paymentData = { ...successfulPaymentIntent, lastDigits: paymentMethod.card?.last4, cardBrand: paymentMethod.card?.brand }
 
-    console.log({ paymentData })
-
     await ordersService.updateOrderPaymentData(paymentData)
   }
 }
