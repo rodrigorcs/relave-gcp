@@ -1,12 +1,11 @@
-import { logger, Response } from "firebase-functions"
+import { Response } from "firebase-functions"
 import { onRequest, Request } from "firebase-functions/v2/https"
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { initializeApp } from "firebase-admin/app"
 import { stripeAction } from "./actions/stripe";
 import { defineSecret } from "firebase-functions/params";
 import { Secrets } from "./models/constants/secrets";
-import { EOrderStatus } from "./models/contracts/order";
-import { daySchedulesService } from "./services/daySchedules";
+import { addOrderToScheduleHandler } from "./handlers/addOrderToSchedule";
 
 const STRIPE_SK = defineSecret(Secrets.STRIPE_SK)
 const STRIPE_PK = defineSecret(Secrets.STRIPE_PK)
@@ -45,29 +44,5 @@ export const stripeWebhook = onRequest({ secrets: [STRIPE_SK, STRIPE_WEBHOOK_SEC
   res.sendStatus(201);
 });
 
-export const addOrderToSchedule = onDocumentUpdated('orders/{orderId}', async (event) => {
-  const oldStatus = event.data?.before.get('status');
-  const newStatus = event.data?.after.get('status');
-  const orderId = event.data?.after.get('id');
-  const dateId = event.data?.after.get('dateId');
-  const orderTimestamp = 1696320000 //event.data?.after.get('timestamp');
-  const duration = 90 //event.data?.after.get('duration'); 
-
-  if (newStatus === oldStatus) return
-  if (newStatus === EOrderStatus.PAID) {
-    logger.info(`Detected payment for order ${orderId}.`)
-
-    try {
-      const daySchedule = await daySchedulesService.getByDate(dateId);
-
-      const { employeeId, startIndex, slotsToMark } = daySchedulesService.getAvailableEmployee(orderTimestamp, duration, daySchedule.employees)
-      await daySchedulesService.updateEmployeeSchedule(dateId, daySchedule.employees, employeeId, startIndex, slotsToMark);
-
-      logger.info(`Assigned order ${orderId} to employee ${employeeId}.`)
-
-    } catch (error) {
-      logger.error(`Error on order ${orderId}`, error)
-    }
-  }
-})
+export const addOrderToSchedule = onDocumentUpdated('orders/{orderId}', addOrderToScheduleHandler)
 
