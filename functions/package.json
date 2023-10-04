@@ -17,6 +17,7 @@
   "main": "lib/index.js",
   "dependencies": {
     "@types/stripe": "^8.0.417",
+    "dayjs": "^1.11.10",
     "firebase-admin": "^11.8.0",
     "firebase-functions": "^4.3.1",
     "stripe": "^13.6.0"
