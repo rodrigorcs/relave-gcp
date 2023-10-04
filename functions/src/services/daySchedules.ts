@@ -46,6 +46,7 @@ const updateTotalBusyTimes = (
 // Service
 
 export const daySchedulesService = {
+  create: daySchedulesRepository.create,
   getByDate: daySchedulesRepository.getByDate,
   updateEmployeeSchedule: async (dateId: string, employees: Record<string, string>, employeeId: string, startIndex: number, slotsToMark: number) => {
     const updatedEmployeeAvailability = markMultipleSlots(employees[employeeId], startIndex, slotsToMark);

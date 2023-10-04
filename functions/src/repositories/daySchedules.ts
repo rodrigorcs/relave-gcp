@@ -11,6 +11,20 @@ export const daySchedulesRepository = {
 
     return daySchedule
   },
+  create: async (dateId: string, employeeIds: string[]) => {
+    const daySchedulesCollection = firestore().collection(EFirestoreCollections.DAY_SCHEDULES)
+    const availableSchedule = '0'.repeat(48)
+    const employees = employeeIds.reduce((acc, id) => ({ ...acc, [id]: availableSchedule }), {});
+
+    const dayScheduleData = {
+      date: dateId,
+      busyTimes: availableSchedule,
+      employees
+    }
+
+    await daySchedulesCollection.doc(dateId).set(dayScheduleData);
+    return dayScheduleData
+  },
   updateEmployeeSchedule: async (dateId: string, employeeId: string, { employeeAvailability, busyTimes }: { employeeAvailability: string, busyTimes: string }) => {
     const daySchedulesCollection = firestore().collection(EFirestoreCollections.DAY_SCHEDULES)
 
