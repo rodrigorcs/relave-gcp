@@ -3,16 +3,19 @@ import { getZeroPointTimestamp } from '../utils/dayjs';
 
 // Helpers
 
-const getIndexFromTimestamp = (orderTimestamp: number, zeroPointTimestamp: number, slotDurationInSeconds: number): number =>
-  Math.floor((orderTimestamp - zeroPointTimestamp) / slotDurationInSeconds);
+const getIndexFromTimestamp = (orderTimestamp: number, zeroPointTimestamp: number, slotDurationInSeconds: number): number => {
+  return Math.floor((orderTimestamp - zeroPointTimestamp) / slotDurationInSeconds);
+}
 
-const areSlotsAvailable = (availability: string, startIndex: number, slotsToMark: number) =>
-  !availability.slice(startIndex, startIndex + slotsToMark).includes('1');
+const areSlotsAvailable = (availability: string, startIndex: number, slotsToMark: number) => {
+  return !availability.slice(startIndex, startIndex + slotsToMark).includes('1');
+}
 
-const getAvailableEmployees = (employees: { [key: string]: string }, startIndex: number, slotsToMark: number) =>
-  Object.entries(employees)
+const getAvailableEmployees = (employees: { [key: string]: string }, startIndex: number, slotsToMark: number) => {
+  return Object.entries(employees)
     .filter(([, availability]) => areSlotsAvailable(availability, startIndex, slotsToMark))
     .map(([id]) => id);
+}
 
 const getLessOccupiedEmployee = (employees: { [key: string]: string }, availableEmployees: string[]) =>
   availableEmployees.reduce((acc, cur) =>
