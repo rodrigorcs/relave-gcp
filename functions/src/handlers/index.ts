@@ -1,4 +1,5 @@
+export * from './addOrderToSchedule'
 export * from './createStripeCustomer'
 export * from './createStripePaymentIntent'
+export * from './getOrdersAvailabilityByDate'
 export * from './stripeWebhook'
-export * from './addOrderToSchedule'

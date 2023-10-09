@@ -25,4 +25,5 @@ export const ordersActions = {
 
     return employeeId
   },
+  getAvailableTimesByDate: daySchedulesService.getAvailableTimesByDate,
 }
