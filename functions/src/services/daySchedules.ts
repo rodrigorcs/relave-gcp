@@ -52,18 +52,28 @@ const bitStringToTimeArray = (
   intervalMinutes: number,
   duration: number,
 ): string[] => {
+  const offsetMinutes = 60
 
   const bits = bitString.split('')
   const requiredBits = Math.ceil(duration / intervalMinutes)
 
+  const now = dayjs().unix()
+  const zeroPointTimestamp = getZeroPointTimestamp(now);
+  const slotDurationInSeconds = intervalMinutes * 60;
+  const timeCutoffIndex = getIndexFromTimestamp(now, zeroPointTimestamp, slotDurationInSeconds);
+
   const allDates = bits.map((bit, index) => {
+    // Filter out past times
+    if (index < timeCutoffIndex + (offsetMinutes / intervalMinutes)) return null
+
+    // Filter out unavailable times
     const availableForDuration = bits.slice(index, index + requiredBits).every((b) => b === '0')
-    return availableForDuration
-      ? dayjs()
-        .startOf('day')
-        .add(index * intervalMinutes, 'minute')
-        .format(EDateFormats.TIME_ID)
-      : null
+    if (!availableForDuration) return null
+
+    return dayjs()
+      .startOf('day')
+      .add(index * intervalMinutes, 'minute')
+      .format(EDateFormats.TIME_ID)
   })
 
   const availableDates = allDates.filter((time) => time !== null) as string[]
