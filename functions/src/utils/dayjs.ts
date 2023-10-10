@@ -18,3 +18,7 @@ export const getZeroPointTimestamp = (orderTimestamp: number): number => {
 
   return zeroPointDate.unix();
 };
+
+export const getIsToday = (dateId: string): boolean => {
+  return dateId === dayjs().tz('America/Bahia').format(EDateFormats.DATE_ID)
+};

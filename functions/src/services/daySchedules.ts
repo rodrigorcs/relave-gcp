@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { daySchedulesRepository } from '../repositories/daySchedules'
-import { EDateFormats, getZeroPointTimestamp } from '../utils/dayjs';
+import { EDateFormats, getIsToday, getZeroPointTimestamp } from '../utils/dayjs';
 
 // Helpers
 
@@ -51,6 +51,7 @@ const bitStringToTimeArray = (
   bitString: string,
   intervalMinutes: number,
   duration: number,
+  isToday: boolean
 ): string[] => {
   const offsetMinutes = 60
 
@@ -63,8 +64,8 @@ const bitStringToTimeArray = (
   const timeCutoffIndex = getIndexFromTimestamp(now, zeroPointTimestamp, slotDurationInSeconds);
 
   const allDates = bits.map((bit, index) => {
-    // Filter out past times
-    if (index < timeCutoffIndex + (offsetMinutes / intervalMinutes)) return null
+    // Filter out past times 
+    if (isToday && index < timeCutoffIndex + (offsetMinutes / intervalMinutes)) return null
 
     // Filter out unavailable times
     const availableForDuration = bits.slice(index, index + requiredBits).every((b) => b === '0')
@@ -109,11 +110,12 @@ export const daySchedulesService = {
     return { employeeId, startIndex, slotsToMark }
   },
   getAvailableTimesByDate: async (dateId: string, duration: number): Promise<string[]> => {
+    const isToday = getIsToday(dateId)
     const daySchedule = await daySchedulesRepository.getByDate(dateId)
-    if (!daySchedule) return bitStringToTimeArray('0'.repeat(48), 30, duration)
+    if (!daySchedule) return bitStringToTimeArray('0'.repeat(48), 30, duration, isToday)
 
     const employeesAvailabilities = Object.values(daySchedule.employees).map((schedule) => {
-      return bitStringToTimeArray(schedule, 30, duration)
+      return bitStringToTimeArray(schedule, 30, duration, isToday)
     })
 
     const mergedAvailabilities = ([] as string[]).concat(...employeesAvailabilities)
