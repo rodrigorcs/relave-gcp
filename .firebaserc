@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "lavei-firebase"
-  }
+    "sandbox": "relave-sandbox"
+  },
+  "targets": {},
+  "etags": {}
 }
