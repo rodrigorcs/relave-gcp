@@ -1,6 +1,6 @@
-const PROJECT_NAME = 'relave'
-const STAGE = 'sandbox'
-const PREFIX = `${PROJECT_NAME}-${STAGE}`
+import { Config } from "../../config"
+
+const PREFIX = `${Config.PROJECT_NAME}-${Config.STAGE}`
 
 export const Secrets = {
   STRIPE_SK: `${PREFIX}-stripe-secretkey`,

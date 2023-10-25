@@ -1,6 +1,8 @@
 {
   "projects": {
-    "sandbox": "relave-sandbox"
+    "default": "relave-sandbox",
+    "sandbox": "relave-sandbox",
+    "prod": "relave-prod"
   },
   "targets": {},
   "etags": {}
