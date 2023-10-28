@@ -1,3 +1,4 @@
+import { Stripe } from "stripe";
 import { getStripeInstance } from "../../external/stripe";
 import { Constants } from "../../models/constants";
 
@@ -25,7 +26,13 @@ export const stripeCustomersService = {
   },
   getPaymentMethodByCustomerId: async (customerId: string, paymentMethodId: string) => {
     const stripe = await getStripeInstance();
-    const paymentMethod = await stripe.customers.retrievePaymentMethod(customerId, paymentMethodId)
+    let paymentMethod: Stripe.Response<Stripe.PaymentMethod>
+    try {
+      paymentMethod = await stripe.customers.retrievePaymentMethod(customerId, paymentMethodId)
+    } catch (error) {
+      // Apple Pay
+      paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId)
+    }
 
     return paymentMethod
   },
