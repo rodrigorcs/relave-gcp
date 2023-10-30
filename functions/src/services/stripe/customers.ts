@@ -12,10 +12,11 @@ export const stripeCustomersService = {
 
     return ephemeralKey
   },
-  createCustomer: async (customerInternalId: string, phoneNumber: string) => {
+  createCustomer: async (customerInternalId: string, phoneNumber: string, name: string) => {
     const stripe = await getStripeInstance();
     const customer = await stripe.customers.create({
       phone: phoneNumber,
+      name,
       metadata: {
         internalId: customerInternalId
       },

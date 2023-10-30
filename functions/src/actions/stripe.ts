@@ -20,9 +20,9 @@ export const stripeAction = {
       publishableKey: getSecret(Secrets.STRIPE_PK)
     }
   },
-  createCustomer: async ({ userId, phoneNumber }: IStripeCreateCustomerParams) => {
-    const stripeCustomerId = await stripeCustomersService.createCustomer(userId, phoneNumber)
-    await usersService.addStripeCustomerIdToUser(userId, stripeCustomerId)
+  createCustomer: async ({ userId, phoneNumber, name }: IStripeCreateCustomerParams) => {
+    const stripeCustomerId = await stripeCustomersService.createCustomer(userId, phoneNumber, name)
+    await usersService.addStripeCustomerIdToUser(userId, stripeCustomerId ?? '')
 
     return stripeCustomerId
   },
